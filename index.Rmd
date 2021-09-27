@@ -90,6 +90,15 @@ pal_superficie_verde <-
     palette = c("#90ee90", "#006400")
   )
 
+# Vegetación
+bins_vegetacion <- c(0, 15, 30, 50, 70, Inf)
+etiquetas_vegetacion <- c("<15", ">15-30", ">30-50", ">50-70", ">70")
+pal_vegetacion <- 
+  colorBin(
+    bins = bins_vegetacion,
+    palette = c("Red", "Yellow", "Green", "#91ac80")
+  )
+
 # Uso de la tierra
 colores_uso_tierra <- 
   c(rgb(236,243,228,maxColorValue=255), rgb(178,209,225,maxColorValue=255), 
@@ -245,6 +254,31 @@ leaflet() %>%
     group = "Superficie verde",
     title = "Superficie verde por habitante (m2)"
   ) %>%   
+  addPolygons(
+    data = sf_metricas_cantones,
+    fillOpacity = 0.7,
+    stroke = TRUE,
+    color = "Black",
+    fillColor = ~pal_vegetacion(cob_veg),
+    weight = 1,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$cob_veg, "%"), 
+                  sep = '<br/>'
+                  ),
+    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
+                  paste("Cobertura:", sf_metricas_cantones$cob_veg, "%"), 
+                  sep = ' - '
+                  ),
+    group = "Vegetación"
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal_vegetacion,
+    values = sf_metricas_cantones$cob_veg,
+    labFormat = function(type, cuts, p) {paste0(etiquetas_vegetacion)},
+    group = "Vegetación",
+    title = "% de cobertura de vegetación"
+  ) %>%   
   addRasterImage(
     raster_uso_tierra,
     layerId = "Uso de la tierra",
@@ -267,7 +301,7 @@ leaflet() %>%
       "CartoDB Dark Matter",
       "Imágenes de ESRI"
     ),
-    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada", "Pastos", "Superficie verde", "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada", "Pastos", "Superficie verde", "Vegetación", "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)
   ) %>%
   addMiniMap(
@@ -284,7 +318,8 @@ leaflet() %>%
   hideGroup("Zonas urbanas") %>%
   hideGroup("Tierra cultivada") %>%
   hideGroup("Pastos") %>%
-  hideGroup("Superficie verde")
+  hideGroup("Superficie verde") %>%
+  hideGroup("Vegetación")
 ```
 
 

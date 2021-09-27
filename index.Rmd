@@ -24,6 +24,9 @@ library(plotly)
 url_agfs_limite_gam <-
   "https://services9.arcgis.com/RrvMEynxDB8hycVO/arcgis/rest/services/gam_limite_gam/FeatureServer/0"
 
+url_agfs_metricas_cantones <-
+  "https://services9.arcgis.com/RrvMEynxDB8hycVO/arcgis/rest/services/gam_cantones_gam_metricas_se/FeatureServer/0"
+
 # url_raster_uso_tierra <-
 #   "https://raw.githubusercontent.com/atlas-servicios-ecosistemicos-gam/datos-uso-tierra/master/gam/USO_COBERTURA_GAM_WEB.tif"
 url_raster_uso_tierra <-"/home/mfvargas/atlas-servicios-ecosistemicos-gam/datos/USO_COBERTURA_GAM_WEB.tif"
@@ -33,6 +36,10 @@ url_raster_uso_tierra <-"/home/mfvargas/atlas-servicios-ecosistemicos-gam/datos/
 # Límite de la GAM
 sf_limite_gam <- 
   esri2sf(url_agfs_limite_gam)
+
+# Métricas de cantones
+sf_metricas_cantones <- 
+  esri2sf(url_agfs_metricas_cantones)
 
 # Límite de la GAM (reproyectada a Web Mercator)
 sf_limite_gam_web <- 
@@ -85,13 +92,16 @@ leaflet() %>%
   addProviderTiles(providers$CartoDB.DarkMatter, group = "CartoDB Dark Matter") %>%
   addProviderTiles(providers$Esri.WorldImagery, group = "Imágenes de ESRI") %>%
   addPolygons(
-    data = sf_limite_gam,
-    color = "Purple",
+    data = sf_metricas_cantones,
+    color = "Black",
     fillColor = "transparent",
     stroke = TRUE,
-    weight = 6.0,
-    group = "Límite de la GAM"
-  ) %>%
+    weight = 2.0,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  sep = '<br/>'
+                  ),    
+    group = "Límites cantonales"
+  ) %>%  
   addRasterImage(
     raster_uso_tierra, 
     layerId = "raster",
@@ -109,7 +119,7 @@ leaflet() %>%
   ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "CartoDB Dark Matter", "Imágenes de ESRI"),
-    overlayGroups = c("Límite de la GAM", "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)    
   ) %>%  
   addMiniMap(

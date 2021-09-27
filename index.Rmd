@@ -64,6 +64,15 @@ pal_zonas_urbanas <-
     palette = c("Yellow", "Brown")
   )
 
+# Tierra cultivada
+bins_tierra_cultivada <- c(0, 5, 12, 30, Inf)
+etiquetas_tierra_cultivada <- c("<5", ">5-12", ">12-30", ">30")
+pal_tierra_cultivada <- 
+  colorBin(
+    bins = bins_tierra_cultivada,
+    palette = c("Yellow", "Brown")
+  )
+
 # Uso de la tierra
 colores_uso_tierra <- 
   c(rgb(236,243,228,maxColorValue=255), rgb(178,209,225,maxColorValue=255), 
@@ -144,6 +153,31 @@ leaflet() %>%
     group = "Zonas urbanas",
     title = "% de cobertura de zonas urbanas"
   ) %>%
+  addPolygons(
+    data = sf_metricas_cantones,
+    fillOpacity = 0.7,
+    stroke = TRUE,
+    color = "Black",
+    fillColor = ~pal_tierra_cultivada(sup_tierra),
+    weight = 1,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$sup_tierra, "%"), 
+                  sep = '<br/>'
+                  ),
+    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
+                  paste("Cobertura:", sf_metricas_cantones$sup_tierra, "%"), 
+                  sep = ' - '
+                  ),
+    group = "Tierra cultivada"
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal_tierra_cultivada,
+    values = sf_metricas_cantones$sup_tierra,
+    labFormat = function(type, cuts, p) {paste0(etiquetas_tierra_cultivada)},
+    group = "Tierra cultivada",
+    title = "% de cobertura de tierra cultivada"
+  ) %>%   
   addRasterImage(
     raster_uso_tierra,
     layerId = "Uso de la tierra",
@@ -166,7 +200,7 @@ leaflet() %>%
       "CartoDB Dark Matter",
       "Imágenes de ESRI"
     ),
-    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada",  "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)
   ) %>%
   addMiniMap(
@@ -180,7 +214,8 @@ leaflet() %>%
   addSearchOSM() %>%
   addResetMapButton() %>%
   addOpacityControls(category = "image", position = "topleft", title = "Transparencia") %>%
-  hideGroup("Zonas urbanas")
+  hideGroup("Zonas urbanas") %>%
+  hideGroup("Tierra cultivada")
 ```
 
 

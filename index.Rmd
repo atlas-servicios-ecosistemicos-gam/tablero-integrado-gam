@@ -13,7 +13,6 @@ library(dplyr)
 library(sf)
 library(leaflet)
 library(leaflet.extras)
-#library(leaflet.opacity)
 library(leaflet.multiopacity)
 library(leafem)
 library(esri2sf)
@@ -71,6 +70,15 @@ pal_tierra_cultivada <-
   colorBin(
     bins = bins_tierra_cultivada,
     palette = c("Yellow", "Brown")
+  )
+
+# Pastos
+bins_pastos <- c(0, 10, 15, 24, Inf)
+etiquetas_pastos <- c("<10", ">10-15", ">15-24", ">24")
+pal_pastos <- 
+  colorBin(
+    bins = bins_pastos,
+    palette = c("Yellow", "Green")
   )
 
 # Uso de la tierra
@@ -178,6 +186,31 @@ leaflet() %>%
     group = "Tierra cultivada",
     title = "% de cobertura de tierra cultivada"
   ) %>%   
+  addPolygons(
+    data = sf_metricas_cantones,
+    fillOpacity = 0.7,
+    stroke = TRUE,
+    color = "Black",
+    fillColor = ~pal_pastos(sup__pasto),
+    weight = 1,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$sup__pasto, "%"), 
+                  sep = '<br/>'
+                  ),
+    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
+                  paste("Cobertura:", sf_metricas_cantones$sup__pasto, "%"), 
+                  sep = ' - '
+                  ),
+    group = "Pastos"
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal_pastos,
+    values = sf_metricas_cantones$sup_pasto,
+    labFormat = function(type, cuts, p) {paste0(etiquetas_pastos)},
+    group = "Pastos",
+    title = "% de cobertura de pastos"
+  ) %>%   
   addRasterImage(
     raster_uso_tierra,
     layerId = "Uso de la tierra",
@@ -200,7 +233,7 @@ leaflet() %>%
       "CartoDB Dark Matter",
       "Imágenes de ESRI"
     ),
-    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada",  "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada", "Pastos", "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)
   ) %>%
   addMiniMap(
@@ -215,7 +248,8 @@ leaflet() %>%
   addResetMapButton() %>%
   addOpacityControls(category = "image", position = "topleft", title = "Transparencia") %>%
   hideGroup("Zonas urbanas") %>%
-  hideGroup("Tierra cultivada")
+  hideGroup("Tierra cultivada") %>%
+  hideGroup("Pastos")
 ```
 
 

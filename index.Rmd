@@ -81,6 +81,15 @@ pal_pastos <-
     palette = c("Yellow", "Green")
   )
 
+# Superficie verde por habitante
+bins_superficie_verde <- c(0, 20, 100, 361, 727, Inf)
+etiquetas_superficie_verde <- c("<20", ">20-100", ">100-361", ">361-727", ">727")
+pal_superficie_verde <- 
+  colorBin(
+    bins = bins_superficie_verde,
+    palette = c("#90ee90", "#006400")
+  )
+
 # Uso de la tierra
 colores_uso_tierra <- 
   c(rgb(236,243,228,maxColorValue=255), rgb(178,209,225,maxColorValue=255), 
@@ -211,6 +220,31 @@ leaflet() %>%
     group = "Pastos",
     title = "% de cobertura de pastos"
   ) %>%   
+  addPolygons(
+    data = sf_metricas_cantones,
+    fillOpacity = 0.7,
+    stroke = TRUE,
+    color = "Black",
+    fillColor = ~pal_superficie_verde(sup_verde_),
+    weight = 1,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$sup_verde_, "m2"), 
+                  sep = '<br/>'
+                  ),
+    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
+                  paste("Cobertura:", sf_metricas_cantones$sup_verde_, "m2"), 
+                  sep = ' - '
+                  ),
+    group = "Superficie verde"
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal_superficie_verde,
+    values = sf_metricas_cantones$sup_verde_,
+    labFormat = function(type, cuts, p) {paste0(etiquetas_superficie_verde)},
+    group = "Superficie verde",
+    title = "Superficie verde por habitante (m2)"
+  ) %>%   
   addRasterImage(
     raster_uso_tierra,
     layerId = "Uso de la tierra",
@@ -233,7 +267,7 @@ leaflet() %>%
       "CartoDB Dark Matter",
       "Imágenes de ESRI"
     ),
-    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada", "Pastos", "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Tierra cultivada", "Pastos", "Superficie verde", "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)
   ) %>%
   addMiniMap(
@@ -249,7 +283,8 @@ leaflet() %>%
   addOpacityControls(category = "image", position = "topleft", title = "Transparencia") %>%
   hideGroup("Zonas urbanas") %>%
   hideGroup("Tierra cultivada") %>%
-  hideGroup("Pastos")
+  hideGroup("Pastos") %>%
+  hideGroup("Superficie verde")
 ```
 
 

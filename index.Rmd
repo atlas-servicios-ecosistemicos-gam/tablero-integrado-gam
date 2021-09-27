@@ -37,14 +37,14 @@ url_raster_uso_tierra <-"/home/mfvargas/atlas-servicios-ecosistemicos-gam/datos/
 sf_limite_gam <- 
   esri2sf(url_agfs_limite_gam)
 
-# Métricas de cantones
-sf_metricas_cantones <- 
-  esri2sf(url_agfs_metricas_cantones)
-
 # Límite de la GAM (reproyectada a Web Mercator)
 sf_limite_gam_web <- 
   sf_limite_gam %>%
   st_transform(3857)
+
+# Métricas de cantones
+sf_metricas_cantones <- 
+  esri2sf(url_agfs_metricas_cantones)
 
 # Capa raster de uso de la tierra (en Web Mercator)
 raster_uso_tierra <-
@@ -54,22 +54,29 @@ raster_uso_tierra <-
 
 #---------------- Paletas de colores ---------------
 
+# Zonas urbanas
+bins_zonas_urbanas <- c(0, 10, 20, 31, 52, Inf)
+etiquetas_zonas_urbanas <- c("<10", ">10-20", ">20-31", ">31-52", ">52")
+pal_zonas_urbanas <- 
+  colorBin(
+    bins = bins_zonas_urbanas,
+    palette = c("Yellow", "Brown")
+  )
+
+# Uso de la tierra
 colores_uso_tierra <- 
   c(rgb(236,243,228,maxColorValue=255), rgb(178,209,225,maxColorValue=255), 
     rgb(43,99,89,   maxColorValue=255), rgb(110,186,148,maxColorValue=255),
     rgb(153,96,83,  maxColorValue=255), rgb(239,147,111,maxColorValue=255),
     rgb(226,217,109,maxColorValue=255), rgb(177,207,177,maxColorValue=255)
   )
-
 etiquetas_uso_tierra <- 
   c("Zonas urbanas continuas y discontinuas", "Aguas continentales", 
     "Bosque secundario temprano", "Bosque secundario medio y tardío",
     "Café", "Fresas, flores y ornamentales", 
     "Hortalizas, raíces y tubérculos", "Pastos con árboles y limpios"
   )
-
 values_uso_tierra <- c(1, 2, 3, 4, 5, 6, 7, 8)
-
 pal <- colorFactor(
   palette = colores_uso_tierra, 
   domain = values_uso_tierra,
@@ -102,6 +109,31 @@ leaflet() %>%
                   ),    
     group = "Límites cantonales"
   ) %>%  
+  addPolygons(
+    data = sf_metricas_cantones,
+    fillOpacity = 0.7,
+    stroke = TRUE,
+    color = "Black",
+    fillColor = ~pal_zonas_urbanas(zonas_urb),
+    weight = 1,
+    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
+                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$zonas_urb, "%"), 
+                  sep = '<br/>'
+                  ),
+    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
+                  paste("Cobertura:", sf_metricas_cantones$zonas_urb, "%"), 
+                  sep = ' - '
+                  ),
+    group = "Zonas urbanas"
+  ) %>%  
+  addLegend(
+    position = "bottomright",
+    pal = pal_zonas_urbanas,
+    values = sf_metricas_cantones$zonas_urb,
+    labFormat = function(type, cuts, p) {paste0(etiquetas_zonas_urbanas)},
+    group = "Zonas urbanas",
+    title = "% de cobertura de zonas urbanas"
+  ) %>%   
   addRasterImage(
     raster_uso_tierra, 
     layerId = "raster",
@@ -119,7 +151,7 @@ leaflet() %>%
   ) %>%
   addLayersControl(
     baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "CartoDB Dark Matter", "Imágenes de ESRI"),
-    overlayGroups = c("Límites cantonales", "Uso de la tierra"),
+    overlayGroups = c("Límites cantonales", "Zonas urbanas", "Uso de la tierra"),
     options = layersControlOptions(collapsed = TRUE)    
   ) %>%  
   addMiniMap(
@@ -134,8 +166,8 @@ leaflet() %>%
   addMouseCoordinates() %>%
   addSearchOSM() %>%
   addResetMapButton() %>%
-  addOpacitySlider(layerId = "raster")
-
+  addOpacitySlider(layerId = "raster") %>%
+  hideGroup("Zonas urbanas")
 ```
 
 

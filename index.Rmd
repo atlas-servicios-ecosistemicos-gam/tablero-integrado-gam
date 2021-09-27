@@ -13,7 +13,8 @@ library(dplyr)
 library(sf)
 library(leaflet)
 library(leaflet.extras)
-library(leaflet.opacity)
+#library(leaflet.opacity)
+library(leaflet.multiopacity)
 library(leafem)
 library(esri2sf)
 library(raster)
@@ -104,69 +105,81 @@ leaflet() %>%
     fillColor = "transparent",
     stroke = TRUE,
     weight = 2.0,
-    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
-                  sep = '<br/>'
-                  ),    
+    popup = paste(
+      paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton),
+      sep = '<br/>'
+    ),
     group = "Límites cantonales"
-  ) %>%  
+  ) %>%
   addPolygons(
     data = sf_metricas_cantones,
     fillOpacity = 0.7,
     stroke = TRUE,
     color = "Black",
-    fillColor = ~pal_zonas_urbanas(zonas_urb),
+    fillColor = ~ pal_zonas_urbanas(zonas_urb),
     weight = 1,
-    popup = paste(paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton), 
-                  paste("<strong>Cobertura:</strong>", sf_metricas_cantones$zonas_urb, "%"), 
-                  sep = '<br/>'
-                  ),
-    label = paste(paste("Cantón:",  sf_metricas_cantones$canton), 
-                  paste("Cobertura:", sf_metricas_cantones$zonas_urb, "%"), 
-                  sep = ' - '
-                  ),
+    popup = paste(
+      paste("<strong>Cantón:</strong>",  sf_metricas_cantones$canton),
+      paste(
+        "<strong>Cobertura:</strong>",
+        sf_metricas_cantones$zonas_urb,
+        "%"
+      ),
+      sep = '<br/>'
+    ),
+    label = paste(
+      paste("Cantón:",  sf_metricas_cantones$canton),
+      paste("Cobertura:", sf_metricas_cantones$zonas_urb, "%"),
+      sep = ' - '
+    ),
     group = "Zonas urbanas"
-  ) %>%  
+  ) %>%
   addLegend(
     position = "bottomright",
     pal = pal_zonas_urbanas,
     values = sf_metricas_cantones$zonas_urb,
-    labFormat = function(type, cuts, p) {paste0(etiquetas_zonas_urbanas)},
+    labFormat = function(type, cuts, p) {
+      paste0(etiquetas_zonas_urbanas)
+    },
     group = "Zonas urbanas",
     title = "% de cobertura de zonas urbanas"
-  ) %>%   
+  ) %>%
   addRasterImage(
-    raster_uso_tierra, 
-    layerId = "raster",
-    colors = pal, 
+    raster_uso_tierra,
+    layerId = "Uso de la tierra",
+    colors = pal,
     opacity = 1,
     group = "Uso de la tierra"
   ) %>%
   addLegend(
-    title = "Uso de la tierra", 
+    title = "Uso de la tierra",
     position = "bottomright",
-    colors = colores_uso_tierra, 
+    colors = colores_uso_tierra,
     opacity = 1,
     labels = etiquetas_uso_tierra,
     group = "Uso de la tierra"
   ) %>%
   addLayersControl(
-    baseGroups = c("OpenStreetMap", "Stamen Toner Lite", "CartoDB Dark Matter", "Imágenes de ESRI"),
+    baseGroups = c(
+      "OpenStreetMap",
+      "Stamen Toner Lite",
+      "CartoDB Dark Matter",
+      "Imágenes de ESRI"
+    ),
     overlayGroups = c("Límites cantonales", "Zonas urbanas", "Uso de la tierra"),
-    options = layersControlOptions(collapsed = TRUE)    
-  ) %>%  
+    options = layersControlOptions(collapsed = TRUE)
+  ) %>%
   addMiniMap(
     toggleDisplay = TRUE,
     position = "bottomleft",
     tiles = providers$OpenStreetMap.Mapnik
   ) %>%
-  addScaleBar(
-    position = "bottomleft",
-    options = scaleBarOptions(imperial = FALSE)
-  ) %>%
+  addScaleBar(position = "bottomleft",
+              options = scaleBarOptions(imperial = FALSE)) %>%
   addMouseCoordinates() %>%
   addSearchOSM() %>%
   addResetMapButton() %>%
-  addOpacitySlider(layerId = "raster") %>%
+  addOpacityControls(category = "image", position = "topleft", title = "Transparencia") %>%
   hideGroup("Zonas urbanas")
 ```
 
